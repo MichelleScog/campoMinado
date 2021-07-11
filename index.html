@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Teste Campo Minado - Michelle Scognamillo</title>
+    <script src="js/campo-minado.js"></script>
+</head>
+
+<body style="font-family: 'Courier New', Courier, monospace;">
+    <div id="exibir-execucao"></div>
+
+    <script>
+        var campoMinado = new CampoMinado();
+
+
+        document.getElementById('exibir-execucao').innerHTML += '----------- Início do jogo -----------';
+        document.getElementById('exibir-execucao').innerHTML += '<pre>' + campoMinado.Tabuleiro() + '</pre>';
+
+        // Realize sua codificação a partir deste ponto, boa sorte!
+
+        //As funções foram criadas levando em consideração um tabuleiro 9 x 9 (9 linhas por 9 colunas)
+        function pegarLinha(posicao) { // Retorna as linhas (1 a 9)
+            return Math.floor(posicao / 9) + 1; //Incrementa +1 (matriz vai do índice 0 a 8)
+        }
+
+        function pegarColuna(linha, posicao) {
+            if (linha == 1) { //Caso a linha seja igual 1, busca próxima posição.
+                return posicao + 1
+            }
+            return posicao - (((linha - 1) * 9)) + 1; //Caso contrário, calcula uma nova posição
+        }
+
+        let naoAbertas = []; // Armazena as posições que não foram verificadas
+        let comMinas = []; // Armazena as posições com Minas
+        let semMinas = []; // Armazena as posições sem Minas
+
+        let linha = null;
+        let coluna = null;
+
+        //Repete até que o jogo tenha sido concluído, ou seja se retornou 1 (Vitória) ou 2 (Game Over)
+        while (campoMinado.JogoStatus() == 0) { // Repete enquanto o status for 0 (Jogo em aberto)
+            let tabuleiro = campoMinado.Tabuleiro(); // Pega o tabuleiro no seu status atual
+
+            document.getElementById('exibir-execucao').innerHTML += '----------- Status: Jogo em aberto ----';
+            document.getElementById('exibir-execucao').innerHTML += '<pre>' + tabuleiro + '</pre>';
+
+            //Remove a quebra de linhas para ter somente as 81 posições, transformando o tabuleiro em uma string "linear"
+            tabuleiro = tabuleiro.split('\r\n').join('');
+
+            for (var i = 0; i < 81; i++) { // Pecorrer todas as posições do tabuleiro (string)
+                if (i % 9 == 0) {
+                    linha = pegarLinha(i); // Se múltiplo de 9 (resto igual a zero), pegar a linha
+                }
+                let coluna = pegarColuna(linha, i); // Com base na linha obtida anteriormente, pega a coluna (da posição 1 a 9)
+                // Cada posição possui outras 8 posições em volta (no sentido horário)
+                // - Superior esquerda
+                // [*][ ][ ]
+                // [ ][X][ ]
+                // [ ][ ][ ]
+                // - Superior
+                // [ ][*][ ]
+                // [ ][X][ ]
+                // [ ][ ][ ]
+                // - Superior direita
+                // [ ][ ][*]
+                // [ ][X][ ]
+                // [ ][ ][ ]
+                // - Direita
+                // [ ][ ][ ]
+                // [ ][X][*]
+                // [ ][ ][ ]
+                // - Inferior direita
+                // [ ][ ][ ]
+                // [ ][X][ ]
+                // [ ][ ][*]
+                // - Inferior
+                // [ ][ ][ ]
+                // [ ][X][ ]
+                // [ ][*][ ]
+                // - Inferior esquerda
+                // [ ][ ][ ]
+                // [ ][X][ ]
+                // [*][ ][ ]
+                // - Esquerda
+                // [ ][ ][ ]
+                // [*][X][ ]
+                // [ ][ ][ ]
+
+                if (tabuleiro[i] != 0 && tabuleiro[i] != '-') { // Se for uma posição com indicação de mina
+
+                    // Verifica se é uma posição não aberta, pega posição anterior e armazena no array naoAbertas
+
+                    // Superior esquerda
+                    if (linha != 1 && coluna != 1 && tabuleiro[i - 10] == '-') {
+                        naoAbertas.push(i - 10);
+                    }
+
+                    // Superior
+                    if (linha != 1 && tabuleiro[i - 9] == '-') {
+                        naoAbertas.push(i - 9);
+                    }
+
+                    // Superior direita
+                    if (linha != 1 && coluna != 9 && tabuleiro[i - 8] == '-') {
+                        naoAbertas.push(i - 8);
+                    }
+
+                    // Direita
+                    if (coluna != 9 && tabuleiro[i + 1] == '-') {
+                        naoAbertas.push(i + 1);
+                    }
+
+                    // Inferior direita
+                    if (linha != 9 && coluna != 9 && tabuleiro[i + 10] == '-') {
+                        naoAbertas.push(i + 10);
+                    }
+
+                    // Inferior
+                    if (linha != 9 && tabuleiro[i + 9] == '-') {
+                        naoAbertas.push(i + 9);
+                    }
+
+                    // Inferior esquerda
+                    if (linha != 9 && coluna != 1 && tabuleiro[i + 8] == '-') {
+                        naoAbertas.push(i + 8);
+                    }
+
+                    // Esquerda
+                    if (coluna != 1 && tabuleiro[i - 1] == '-') {
+                        naoAbertas.push(i - 1);
+                    }
+
+                    // Verifica se a quantidade de posições não abertas e adiciona no array naoAbertas, se for igual o indicativo da quantidade de minas em volta,  armazena a posição no array comMinas.
+                    if (naoAbertas.length == tabuleiro[i]) {
+                        naoAbertas.forEach(posicacao => {
+                            if (comMinas.indexOf(posicacao) == -1) { // Posições com minas que não pertence ao array naoAbertas
+                                let linhaMina = pegarLinha(posicacao); // Pega o número de linhas com os que não fazem parte
+                                let colunaMina = pegarColuna(linhaMina, posicacao); // Pega o número de colunas com os que não fazem parte
+
+                                document.getElementById('exibir-execucao').innerHTML += '<pre>Bomba encontrada: linha(' + linhaMina + ') / coluna(' + colunaMina + ')</pre>'; //Exibe a posição com Mina
+                                comMinas.push(posicacao); // Armazena a posição com Mina no array comMina
+                            }
+                        });
+                    }
+
+                    if (naoAbertas.length > tabuleiro[i]) { // Verifica se a quantidade de posições não abertas é maior que o indicativo da quantidade de minas em volta
+                        semMinas = naoAbertas.filter(x => !comMinas.includes(x)); // Abre as posições sem minas
+
+                        if ((naoAbertas.length - tabuleiro[i]) == semMinas.length) { // Verifica se há posições para abrir,  (posições sem abrir menos o indicativo de quantidade de minas é igual o tamanho do array semMinas)
+                            semMinas.forEach(posicao => {
+                                let linhaAbrir = pegarLinha(posicao);
+                                let colunaAbrir = pegarColuna(linhaAbrir, posicao);
+                                campoMinado.Abrir(linhaAbrir, colunaAbrir);
+
+                                document.getElementById('exibir-execucao').innerHTML += '<pre>Abrindo casa: linha(' + linhaAbrir + ') / coluna(' + colunaAbrir + ')</pre>';
+                            });
+
+                            naoAbertas = [];  // Reseta o array
+                            break; // Interrompe o laço de repetição
+                        }
+                    }
+
+                    naoAbertas = []; // Reseta o array
+                }
+            }
+        }
+
+        if (campoMinado.JogoStatus() == 1) {
+            document.getElementById('exibir-execucao').innerHTML += '----------- Status: Vitória -----------';
+        } else {
+            document.getElementById('exibir-execucao').innerHTML += '----------- Status: Game Over ---------';
+        }
+
+        document.getElementById('exibir-execucao').innerHTML += '<pre>' + campoMinado.Tabuleiro() + '</pre>';
+    </script>
+</body>
+
+</html>
